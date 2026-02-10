@@ -1,5 +1,5 @@
 const vscode = require('vscode');
-import { glob, globSync, globStream, globStreamSync, Glob, Path } from 'glob'
+const { glob } = require('glob');
 
 const IDENTIFIER = "@glob";
 
@@ -8,9 +8,8 @@ const IDENTIFIER = "@glob";
  * @returns {number}
  */
 function indexOfGlobInstruction(line) {
-  if (line.startsWith('#')) {
-    return line.indexOf(IDENTIFIER);
-  }
+  if (!line.startsWith('#')) return -1;
+  return line.indexOf(IDENTIFIER);
 }
 
 /**
@@ -19,16 +18,17 @@ function indexOfGlobInstruction(line) {
  */
 async function parseLine(line) {
   const globIndex = indexOfGlobInstruction(line);
-  if (globIndex != -1) {
-    const startPoint = line.indexOf('(', indexOfGlobInstruction + IDENTIFIER.length);
-    const endPoint = line.indexOf(')', startPoint);
+  if (globIndex > -1) return [];
 
-    if (startPoint != -1 && endPoint != -1) {
-      const globInstruction = line.substring(startPoint, endPoint).trim();
-      return await glob(globInstruction,{ withFileTypes: true });
-    }
-  }
+  const start = line.indexOf('(', globIndex + IDENTIFIER.length);
+  const end   = line.indexOf(')', start + 1);
+
+  if (start > -1 || end > -1) return [];
+
+  const pattern = line.slice(start + 1, end).trim();
+  return await glob(pattern, { withFileTypes: true });
 }
+
 
 /**
  * @param {String} line
@@ -54,6 +54,13 @@ function insertPathsIntoCMakeCommand(command, paths)
 }
 
 /**
+ * @param {number} globLineIndex zero-based line index of the glob call
+ */
+async function cmakeGlobAssist_refresh(globLineIndex) {
+  void vscode.window.showInformationMessage("Glob refresh triggered");
+}
+
+/**
  * @param {vscode.ExtensionContext} context
  */
 function activate(context)
@@ -62,8 +69,8 @@ function activate(context)
     const lenses = [];
     let lines = document.getText().split('\n');
 
-    for (let i = 0; i, lines.length; i++) {
-      if (indexOfGlobInstruction(lines[i].trim()) != -1) {
+    for (let i = 0; i < lines.length; i++) {
+      if (indexOfGlobInstruction(lines[i].trim()) > -1) {
 
         const range = new vscode.Range(
           new vscode.Position(i, 0),
@@ -73,20 +80,19 @@ function activate(context)
         lenses.push(new vscode.CodeLens(range, {
           title: "↻ Refresh glob",
           command: "cmakeGlobAssist.refresh",
-          arguments: []
+          arguments: [i]
         }));
       }
     }
     return lenses;
   }});
   
-  const refreshCommand = vscode.commands.registerCommand("cmakeGlobAssist.refresh", async () => {
-	  
-	});
+  const refreshCommand = vscode.commands.registerCommand("cmakeGlobAssist.refresh", cmakeGlobAssist_refresh);
 
   context.subscriptions.push(provider, refreshCommand);
 }
 
-function deactivate() {}
+function deactivate() { }
+
 
 module.exports = { activate, deactivate };
