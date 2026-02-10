@@ -1,6 +1,6 @@
 {
   "name": "cmake-glob-assist",
-  "displayName": "CMake Glob Assist",
+  "displayName": "CMake Explicit Glob",
   "description": "Explicitly glob for cmake (without using file(GLOB ...))",
   "version": "0.0.1",
   "publisher": "kruumy",
@@ -11,6 +11,14 @@
   },
   "engines": {
     "vscode": "^1.86.0"
+  },
+  "contributes": {
+    "snippets": [
+      {
+        "language": "cmake",
+        "path": "./snippets/cmake.json"
+      }
+    ]
   },
   "categories": [
     "Programming Languages",

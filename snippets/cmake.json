@@ -1,0 +1,18 @@
+{
+    "Glob source files": {
+        "prefix": "globsrc",
+        "description": "CMake Explicit Glob: source glob block",
+        "body": [
+            "# @glob(\"src/**/*.{cpp,c}\")",
+            "# @end"
+        ]
+    },
+    "Glob header files": {
+        "prefix": "globinclude",
+        "description": "CMake Explicit Glob: header glob block",
+        "body": [
+            "# @glob(\"include/**/*.{h,hpp}\")",
+            "# @end"
+        ]
+    }
+}
