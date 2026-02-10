@@ -10,6 +10,7 @@ const SUPPORTED_COMMANDS = ['add_library', 'add_executable', 'target_sources'];
  * @param {() => FunctionDefinition} globFunctionGetter
  * @param {() => FunctionDefinition} cMakeFunctionGetter
  * @param {vscode.TextDocument} document
+ * 
  */
 async function cmakeGlobAssist_refresh(globFunctionGetter, cMakeFunctionGetter, document) {
 
@@ -28,14 +29,28 @@ async function cmakeGlobAssist_refresh(globFunctionGetter, cMakeFunctionGetter, 
   }
   files.sort();
 
-  for (let i = 0; i < files.length; i++) {
-    cMakeFunction.parameters[2 + i] = `"${files[i].replace(/\\/g, '/')}"`;
+  const secondParameter = cMakeFunction.parameters[1];
+  cMakeFunction.parameters = cMakeFunction.parameters.slice(0, 1);
+
+  let newCMakeFunction = `${cMakeFunction.name}(${cMakeFunction.parameters[0]}`;
+  if (cMakeFunction.parameters.length >= 1 && !secondParameter.includes(".")) {
+    newCMakeFunction += ` ${secondParameter}`;
   }
+
+  let indent = "";
+  for (let i = 0; i < cMakeFunction.startPosition.character; i++) {
+    indent += " ";
+  }
+
+  for (let i = 0; i < files.length; i++) {
+    newCMakeFunction += "\n" + indent + `"${files[i].replace(/\\/g, '/')}"`;
+  }
+  newCMakeFunction += "\n" + indent + ")";
 
   const edit = new vscode.WorkspaceEdit();
   edit.replace(document.uri,
     new vscode.Range(cMakeFunction.startPosition, cMakeFunction.endPosition),
-    cMakeFunction.toString(" ")
+    newCMakeFunction
   );
   await vscode.workspace.applyEdit(edit);
 
