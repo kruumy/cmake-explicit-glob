@@ -4,7 +4,7 @@ const path = require('path');
 const { FunctionDefinition } = require("./FunctionDefinition")
 
 const IDENTIFIER = "@glob";
-const SUPPORTED_COMMANDS = ['add_library', 'add_executable', 'target_sources'];
+const SUPPORTED_COMMANDS = ["add_library", "add_executable", "target_sources", "set"];
 
 /**
  * @param {() => FunctionDefinition} globFunctionGetter
@@ -33,7 +33,7 @@ async function cmakeGlobAssist_refresh(globFunctionGetter, cMakeFunctionGetter, 
   cMakeFunction.parameters = cMakeFunction.parameters.slice(0, 1);
 
   let newCMakeFunction = `${cMakeFunction.name}(${cMakeFunction.parameters[0]}`;
-  if (cMakeFunction.parameters.length >= 1 && !secondParameter.includes(".")) {
+  if (secondParameter && !secondParameter.includes(".") && !secondParameter.includes("\"")) {
     newCMakeFunction += ` ${secondParameter}`;
   }
 
