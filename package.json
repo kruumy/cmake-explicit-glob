@@ -1,5 +1,5 @@
 {
-  "name": "cmake-glob-assist",
+  "name": "cmake-explicit-glob",
   "displayName": "CMake Explicit Glob",
   "description": "Explicitly glob for cmake (without using file(GLOB ...))",
   "version": "0.0.1",
@@ -7,7 +7,7 @@
   "icon": "icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/kruumy/cmake-glob-assist.git"
+    "url": "https://github.com/kruumy/cmake-explicit-glob.git"
   },
   "engines": {
     "vscode": "^1.86.0"
