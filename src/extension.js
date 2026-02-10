@@ -3,54 +3,70 @@ const { glob } = require('glob');
 const path = require('path');
 const { FunctionDefinition } = require("./FunctionDefinition")
 
-const IDENTIFIER = "@glob";
-const SUPPORTED_COMMANDS = ["add_library", "add_executable", "target_sources", "set"];
+const ESCAPE_TOKEN = "@";
+const CODE_LENS_COMMANDS = {
+  glob: {
+    codeLensText: "↻ Refresh Glob",
+    command: "cMakeExplicitGlob.refresh",
+    commandHandler: cMakeExplicitGlob_refresh,
+  }
+};
+const END_COMMAND_KEY = "end";
 
 /**
- * @param {() => FunctionDefinition} globFunctionGetter
- * @param {() => FunctionDefinition} cMakeFunctionGetter
  * @param {vscode.TextDocument} document
- * 
+ * @param {number} startLine line index
+ * @returns {number | null}
  */
-async function cmakeGlobAssist_refresh(globFunctionGetter, cMakeFunctionGetter, document) {
+function getNextEndLine(document, startLine) {
+  for (let i = startLine; i < document.lineCount; i++) {
+    const line = document.lineAt(i);
+    if (line.text.trimStart().startsWith("#") && line.text.includes(`${ESCAPE_TOKEN}${END_COMMAND_KEY}`)) {
+      return i;
+    }
+  }
+  return null;
+}
+
+/**
+ * @param {() => FunctionDefinition | null} globFunctionGetter
+ * @param {vscode.TextDocument} document
+ */
+async function cMakeExplicitGlob_refresh(globFunctionGetter, document) {
 
   const globFunction = globFunctionGetter();
-  const cMakeFunction = cMakeFunctionGetter();
-
+  if (globFunction == null) {
+    vscode.window.showErrorMessage("Could not parse glob function call");
+    return;
+  }
   if (globFunction.parameters.length <= 0) {
     vscode.window.showErrorMessage("Glob function call has 0 parameters");
     return;
   }
-
-  const files = await glob(globFunction.parameters[0], { cwd: path.dirname(document.fileName) });
-  if (files.length === 0) {
-    void vscode.window.showInformationMessage("No files found for glob");
+  const endLine = getNextEndLine(document, globFunction.endPosition.line)
+  if (endLine == null) {
+    vscode.window.showErrorMessage(`Could not find ${ESCAPE_TOKEN}${END_COMMAND_KEY}`);
     return;
   }
+  const files = await glob(globFunction.parameters[0], { cwd: path.dirname(document.fileName) });
+  if (files.length <= 0) {
+    void vscode.window.showInformationMessage("No files found for glob :(");
+    return;
+  }
+
   files.sort();
 
-  const secondParameter = cMakeFunction.parameters[1];
-  cMakeFunction.parameters = cMakeFunction.parameters.slice(0, 1);
-
-  let newCMakeFunction = `${cMakeFunction.name}(${cMakeFunction.parameters[0]}`;
-  if (secondParameter && !secondParameter.includes(".") && !secondParameter.includes("\"")) {
-    newCMakeFunction += ` ${secondParameter}`;
-  }
-
-  let indent = "";
-  for (let i = 0; i < cMakeFunction.startPosition.character; i++) {
-    indent += " ";
-  }
-
+  const indent = " ".repeat(globFunction.startPosition.character - 1);
+  let sourceList = "";
   for (let i = 0; i < files.length; i++) {
-    newCMakeFunction += "\n" + indent + `"${files[i].replace(/\\/g, '/')}"`;
+    sourceList += `\n${indent}"${files[i].replace(/\\/g, '/')}"`;
   }
-  newCMakeFunction += "\n" + indent + ")";
+  sourceList += "\n"
 
   const edit = new vscode.WorkspaceEdit();
   edit.replace(document.uri,
-    new vscode.Range(cMakeFunction.startPosition, cMakeFunction.endPosition),
-    newCMakeFunction
+    new vscode.Range(globFunction.endPosition, new vscode.Position(endLine, 0)),
+    sourceList
   );
   await vscode.workspace.applyEdit(edit);
 
@@ -61,49 +77,33 @@ async function cmakeGlobAssist_refresh(globFunctionGetter, cMakeFunctionGetter, 
  * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
-  const provider = vscode.languages.registerCodeLensProvider({ language: 'cmake', scheme: 'file' }, {
+
+  for (const [key, cmd] of Object.entries(CODE_LENS_COMMANDS)) {
+    context.subscriptions.push(vscode.commands.registerCommand(cmd.command, cmd.commandHandler));
+  }
+
+  context.subscriptions.push(vscode.languages.registerCodeLensProvider({ language: 'cmake', scheme: 'file' }, {
     provideCodeLenses(document) {
       const lenses = [];
-
-      let globFunction = null;
-      let cMakeFunction = null;
 
       for (let i = 0; i < document.lineCount; i++) {
         const line = document.lineAt(i);
 
-        if (line.text.startsWith('#') && line.text.indexOf(IDENTIFIER) > -1) {
-          globFunction = () => FunctionDefinition.parseFromDocument(document, i);
-
-        }
-
-        if (globFunction != null) {
-
-          SUPPORTED_COMMANDS.forEach(element => {
-            if (line.text.indexOf(element) > -1) {
-              cMakeFunction = () => FunctionDefinition.parseFromDocument(document, i);
-              return;
-            }
-          });
-
-          if (cMakeFunction != null) {
+        Object.entries(CODE_LENS_COMMANDS)
+          .filter(([key]) => line.text.includes(`${ESCAPE_TOKEN}${key}`))
+          .forEach(([_, cmd]) => {
             lenses.push(new vscode.CodeLens(line.range, {
-              title: "↻ Refresh Glob",
-              command: "cmakeGlobAssist.refresh",
-              arguments: [globFunction, cMakeFunction, document]
+              title: cmd.codeLensText,
+              command: cmd.command,
+              arguments: [() => FunctionDefinition.parseFromDocument(document, i), document]
             }));
-            globFunction = null;
-            cMakeFunction = null;
-          }
-        }
+          });
       }
 
       return lenses;
     }
-  });
+  }));
 
-  const refreshCommand = vscode.commands.registerCommand("cmakeGlobAssist.refresh", cmakeGlobAssist_refresh);
-
-  context.subscriptions.push(provider, refreshCommand);
 }
 
 function deactivate() { }

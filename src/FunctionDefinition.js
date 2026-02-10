@@ -15,14 +15,6 @@ class FunctionDefinition {
     }
 
     /**
-     * @param {string} parameterSeparator
-     * @returns {string}
-     */
-    toString(parameterSeparator = ", ") {
-        return `${this.name}(${this.parameters.join(parameterSeparator)})`;
-    }
-
-    /**
      * Parse a function call from a raw string (single-line or collected text)
      * @param {string} rawstr
      * @returns {FunctionDefinition | null}
@@ -71,8 +63,6 @@ class FunctionDefinition {
 
         return new FunctionDefinition(name, parameters);
     }
-
-
 
     /**
      * Parse a function call starting at a given line in a document

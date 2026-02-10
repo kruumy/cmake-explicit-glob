@@ -20,14 +20,6 @@
     "onLanguage:cmake"
   ],
   "main": "./src/extension.js",
-  "contributes": {
-    "commands": [
-      {
-        "command": "cmakeGlobAssist.refresh",
-        "title": "CMake Glob Assist: Refresh Glob"
-      }
-    ]
-  },
   "devDependencies": {
     "@types/vscode": "^1.86.0"
   },
