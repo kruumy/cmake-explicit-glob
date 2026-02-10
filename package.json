@@ -3,10 +3,12 @@
   "displayName": "CMake Glob Assist",
   "description": "Explicitly glob for cmake (without using file(GLOB ...))",
   "version": "0.0.1",
+  "publisher": "kruumy",
   "engines": {
     "vscode": "^1.86.0"
   },
   "categories": [
+    "Programming Languages",
     "Other"
   ],
   "activationEvents": [
@@ -17,7 +19,7 @@
     "commands": [
       {
         "command": "cmakeGlobAssist.refresh",
-        "title": "Refresh glob files"
+        "title": "CMake Glob Assist: Refresh Glob"
       }
     ]
   },
