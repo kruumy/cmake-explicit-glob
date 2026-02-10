@@ -7,11 +7,14 @@ const IDENTIFIER = "@glob";
 const SUPPORTED_COMMANDS = ['add_library', 'add_executable', 'target_sources'];
 
 /**
- * @param {FunctionDefinition} globFunction
- * @param {FunctionDefinition} cMakeFunction
+ * @param {() => FunctionDefinition} globFunctionGetter
+ * @param {() => FunctionDefinition} cMakeFunctionGetter
  * @param {vscode.TextDocument} document
  */
-async function cmakeGlobAssist_refresh(globFunction, cMakeFunction, document) {
+async function cmakeGlobAssist_refresh(globFunctionGetter, cMakeFunctionGetter, document) {
+
+  const globFunction = globFunctionGetter();
+  const cMakeFunction = cMakeFunctionGetter();
 
   if (globFunction.parameters.length <= 0) {
     vscode.window.showErrorMessage("Glob function call has 0 parameters");
@@ -52,8 +55,9 @@ function activate(context) {
 
       for (let i = 0; i < document.lineCount; i++) {
         const line = document.lineAt(i);
+
         if (line.text.startsWith('#') && line.text.indexOf(IDENTIFIER) > -1) {
-          globFunction = FunctionDefinition.parseFromDocument(document, i);
+          globFunction = () => FunctionDefinition.parseFromDocument(document, i);
 
         }
 
@@ -61,7 +65,7 @@ function activate(context) {
 
           SUPPORTED_COMMANDS.forEach(element => {
             if (line.text.indexOf(element) > -1) {
-              cMakeFunction = FunctionDefinition.parseFromDocument(document, i);
+              cMakeFunction = () => FunctionDefinition.parseFromDocument(document, i);
               return;
             }
           });
