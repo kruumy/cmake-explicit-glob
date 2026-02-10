@@ -1,9 +1,9 @@
 
-#  **CMake Explicit Glob**
+# <img src="icon.png" alt="icon" width="32" height="32" /> **CMake Explicit Glob**
 
 A VSCode extension adding explicit globbing for CMake *(without using file(GLOB ...))* 
 
-![icon](icon.png) ![Demo](demo.gif)  
+ ![Demo](demo.gif)  
 
 ## How to use...
 * Add a #comment with a `@glob()` call above your `add_executable()`, `add_library()`, or `target_sources()`
