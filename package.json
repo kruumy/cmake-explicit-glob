@@ -1,0 +1,30 @@
+{
+  "name": "cmake-glob-assist",
+  "displayName": "CMake Glob Assist",
+  "description": "Explicitly glob for cmake (without using file(GLOB ...))",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.86.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:cmake"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "cmakeGlobAssist.refresh",
+        "title": "Refresh glob files"
+      }
+    ]
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.86.0"
+  },
+  "dependencies": {
+    "glob": "^13.0.1"
+  }
+}
