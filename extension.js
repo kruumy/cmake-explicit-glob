@@ -220,7 +220,7 @@ function activate(context) {
         const globInstructionIndex = indexOfInstruction(line.text.trim(), IDENTIFIER);
         if (globInstructionIndex > -1) {
           lenses.push(new vscode.CodeLens(line.range, {
-            title: "↻ Refresh glob",
+            title: "↻ Refresh Glob",
             command: "cmakeGlobAssist.refresh",
             arguments: [line, document, globInstructionIndex]
           }));
