@@ -2,7 +2,7 @@
   "name": "cmake-explicit-glob",
   "displayName": "CMake Explicit Glob",
   "description": "Explicitly glob for cmake (without using file(GLOB ...))",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "publisher": "kruumy",
   "icon": "icon.png",
   "repository": {
