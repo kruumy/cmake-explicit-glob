@@ -56,10 +56,13 @@ async function cMakeExplicitGlob_refresh(globFunctionGetter, document) {
 
   files.sort();
 
-  const indent = " ".repeat(globFunction.startPosition.character - 1);
+  let indent_spaces = document.lineAt(globFunction.startPosition.line).text.indexOf('#');
+  if (indent_spaces === -1) {
+    indent_spaces = globFunction.startPosition.character - 1;
+  }
   let sourceList = "";
   for (let i = 0; i < files.length; i++) {
-    sourceList += `\n${indent}"${files[i].replace(/\\/g, '/')}"`;
+    sourceList += `\n${" ".repeat(indent_spaces)}"${files[i].replace(/\\/g, '/')}"`;
   }
   sourceList += "\n"
 
